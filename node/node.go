@@ -45,8 +45,10 @@ import (
 	"math/rand"
 	"sync"
 	"time"
+	//"fmt"
 	"github.com/shirou/gopsutil/process"
 	"github.com/shirou/gopsutil/mem"
+	"sort"
 )
 
 type ProcInfo struct{
@@ -63,15 +65,44 @@ func (a ByUsage) Less(i, j int) bool {
 }
 
 func getCPUUsage() float64 {
+	// var c []float64
+	//
+	//
+  // for n := 0 ;n<2; n++{
+  //   processes, _ := process.Processes()
+  //   for _, p := range processes{
+  //     a, _ := p.CPUPercent()
+  //     n, _ := p.Name()
+  // 		if n == "usage"{
+  // 			c = append(c, a)
+  //       break
+  // 		}
+  //   }
+	//
+  // }
+
 	processes, _ := process.Processes()
+
+  var procinfos []ProcInfo
   for _, p := range processes{
     a, _ := p.CPUPercent()
     n, _ := p.Name()
-		if n == "usage"{
-		return a
-		}
+    procinfos = append(procinfos, ProcInfo{n, a})
   }
-	return -1
+  sort.Sort(ByUsage(procinfos))
+
+  for _, p := range procinfos[:1]{
+    return p.Usage
+  }
+
+  var m float64
+	// for i, e := range c {
+	//   if i==0 || e > m {
+	//       m = e
+	//   }
+	// }
+
+	return m
 }
 
 func getMemUsage() float64 {
@@ -362,7 +393,7 @@ func (n *Node) updateFollowers() {
 		return
 	}
 
-	var h map[string]Health
+	h := make(map[string]Health)
 
 	for _, peer := range n.Cluster {
 		if n.Log.LastIndex() < peer.NextIndex {
@@ -385,9 +416,12 @@ func (n *Node) updateFollowers() {
 			continue
 		}
 
+
 		h[peer.ID] = respData.Stat
+		log.Printf("\n\n%v\n\n", h)
 
 		if len(h)==len(n.Cluster) {
+			log.Printf("\n\n%v\n\n", h)
 			e := Entry{CmdID: er.CmdID, Index: n.Log.LastIndex(), Term: n.Term, NodeHealth: h, Data:[]byte("NOP")}
 			n.Log.Append(&e)
 		}
@@ -516,7 +550,8 @@ func (n *Node) doAppendEntries(er EntryRequest) (EntryResponse, error) {
 
 	if bytes.Compare(er.Data, []byte("NOP")) == 0 {
 		log.Printf("[%s] HEARTBEAT", n.ID)
-		return EntryResponse{Term: n.Term, Success: true}, nil
+		log.Printf("\n\n%v\n%v\n\n", getCPUUsage(),getMemUsage())
+		return EntryResponse{Term: n.Term, Success: err == nil, Stat: Health{CPUUsage: getCPUUsage(), MemeoryUsage: getMemUsage(), Status: 1}}, nil
 	}
 
 	e := &Entry{
@@ -532,6 +567,7 @@ func (n *Node) doAppendEntries(er EntryRequest) (EntryResponse, error) {
 	if err != nil {
 		log.Printf("[%s] Append error - %s", n.ID, err)
 	}
+
 
 	return EntryResponse{Term: n.Term, Success: err == nil, Stat: Health{CPUUsage: getCPUUsage(), MemeoryUsage: getMemUsage(), Status: 1}}, nil
 }

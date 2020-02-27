@@ -7,9 +7,9 @@ import (
 )
 
 type Health struct {
-	CPUUsage float64
-	MemeoryUsage float64
-	Status float64
+	CPUUsage float64 `json:"cpuusage"`
+	MemeoryUsage float64 `json:"memeoryusage"`
+	Status float64 `json:"status"`
 }
 
 

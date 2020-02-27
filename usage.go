@@ -39,9 +39,15 @@ func main() {
         break
   		}
     }
+
   }
 
-  m := c[0]
+  m := 0
+  for i, e := range c {
+    if i==0 || e > m {
+        m = e
+    }
+  }
 
   fmt.Println(m)
 

@@ -15,12 +15,14 @@ func main()  {
 	log.SetFlags(log.Ldate | log.Lmicroseconds)
 
   nodes, leader_node := startCluster(3)
-	defer stopCluster(nodes)
-	time.Sleep(250 * time.Millisecond)
-	if countLeaders(nodes) == 1 {
-		fmt.Println("leaders should still be one who is %v", leader_node.ID)
-	}
 
+	for{
+		time.Sleep(250 * time.Millisecond)
+		if countLeaders(nodes) == 1 {
+			fmt.Println("leaders should still be one who is %v", leader_node.ID)
+
+		}
+	}
 
 }
 

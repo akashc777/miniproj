@@ -38,6 +38,8 @@ func (t *HTTPTransport) Serve(node *Node) error {
 		if err != nil && !strings.Contains(err.Error(), "use of closed network connection") {
 			log.Printf("ERROR: http.Serve() - %s", err)
 		}
+		time.Sleep(10 * time.Second)
+
 		close(t.node.exitChan)
 		log.Printf("[%s] exiting Serve()", t.node.ID)
 	}()
@@ -182,9 +184,12 @@ func (t *HTTPTransport) RequestVoteRPC(address string, voteRequest VoteRequest) 
 func (t *HTTPTransport) AppendEntriesRPC(address string, entryRequest EntryRequest) (EntryResponse, error) {
 	endpoint := fmt.Sprintf("http://%s/append_entries", address)
 	log.Printf("[%s] AppendEntriesRPC %+v to %s", t.node.ID, entryRequest, endpoint)
-	_, err := apiRequest("POST", endpoint, entryRequest, 500*time.Millisecond)
+	respdata, err := apiRequest("POST", endpoint, entryRequest, 500*time.Millisecond)
 	if err != nil {
 		return EntryResponse{}, err
 	}
+
+	fmt.Printf("\n\n%v\n\n", respdata)
+
 	return EntryResponse{}, nil
 }
